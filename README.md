@@ -1,9 +1,10 @@
 # Sentinel1-Biodiversity
 Code, example dataset, and instructions of Sentinel-1 data pre-processing and pixel-based summary statistics used in "Radar vision for mapping forest biodiversity from space"
 
-Radar vision in the mapping of forest biodiversity from space.
-Bae et al.
-# Supplementary Information
+
+
+# Supplementary Information 
+Bae et al.(2019) Radar vision in the mapping of forest biodiversity from space.
 ## Method S3 Sentinel-1 data pre-processing and pixel-based summary statistics
 ### S3.1 Download of the GRDH product from the ESA Sentinel Data Hub (DHuS)
 All Sentinel data are available for free from the official ESA data portal (https:/scihub.copernicus.eu). User registration is required, but free. DHuS offers a user interface (Fig. S23) for interactive data discovery, or, alternatively an API for automated query and retrieval.
@@ -38,11 +39,17 @@ The output of this module is gamma_0 in geographic coordinates with 10 m pixel s
 Another step often useful for SAR data processing is spatial speckle filtering. However, due to the approach taken in this manuscript, that is, calculating median backscatter over multiple acquisitions, smoothing of speckle effects takes place implicitly in the time, instead of in space, thus not causing any further loss of geometric detail.
 
 Processing time: 14 mins
+
 Processing systems:
+
 We tested the example on the following platform:
+
 Windows edition: Windows 8.1 Enterprise
+
 Processor: Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
+
 RAM: 64.0 GB
+
 System type: 64-bit Operating System, x64-based processor
 
 ### S3.3 Derivation of pixel- and neighborhood-based summary statistics
