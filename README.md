@@ -38,33 +38,18 @@ The Sentinel GRDH product is not provided in geographic coordinates, but in imag
 The output of this module is gamma_0 in geographic coordinates with 10 m pixel spacing.
 Another step often useful for SAR data processing is spatial speckle filtering. However, due to the approach taken in this manuscript, that is, calculating median backscatter over multiple acquisitions, smoothing of speckle effects takes place implicitly in the time, instead of in space, thus not causing any further loss of geometric detail.
 
-Processing time: 14 mins
-
-Processing systems:
-
-We tested the example on the following platform:
-
-Windows edition: Windows 8.1 Enterprise
-
-Processor: Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz
-
-RAM: 64.0 GB
-
-System type: 64-bit Operating System, x64-based processor
-
 ### S3.3 Derivation of pixel- and neighborhood-based summary statistics
 This section builds on temporal stacks of Sentinel-1 gamma_0 data processed as described above. Like the rest of the manuscript it was performed using R.
 #### 1. Required software
 Download and install R in following website depending on your operating system (Windows, Mac OS X, Linux) : https://cran.r-project.org/.
 Minimum required packages which need to be installed in addition are: rgeos, raster, rgdal, glcm
 #### 2. Demo workflow
-Define your input directory containing example input files.
+1. Define your input directory containing example input files.
 The list of example input files is as follows: 
 1) Two temporal stacks of VH and VV gamma_0 data: 
      ALB_gamma0_VH.tif and ALB_gamma0_VV.tif
 2) Sentinel-1 data acquisition dates: ALB_acquisition_dates.csv
 3) Shapefile of center of example plots: ALB_example_plots.*
 4) Calculated mean values of all our 1-ha plots: S1_mean.csv
-Source the R script. << Sentinel1_pixel_ neighborhood _statistics.r >>
+2. Source the R script. << Sentinel1_pixel_ neighborhood _statistics.r >>
 
-Processing time: 10 mins
