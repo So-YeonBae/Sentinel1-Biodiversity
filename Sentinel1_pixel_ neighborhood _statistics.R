@@ -20,7 +20,7 @@ dir.create(outputDirectory)
 scaleFactor  <- 1e4      ## Scale factor used for compressing rasters
 dataType     <- "INT4S"  ## Data type used to store raster data (integers between -2,147,483,647 and 2,147,483,647)
 samplingSite <- "ALB"    ## Name of study site (forest) used in this example
-cOpts  <- c("COMPRESS=DEFLATE", "INTERLEAVE=BAND") ## Compression for GeoTiff files
+cOpts  <- c("COMPRESS=DEFLATE", "INTERLEAVE=BAND") ## Compression for GeoTiff files and efficient file structure
 
 
 ## Required input files for process 1 (Calculate the seasonal median) ##
@@ -49,8 +49,6 @@ paste0(inputDirectory,"ALB_example_plots.shp")
 # 2) output files from process 2 and 3
 
 
-
-
 ############# Process 1. Calculate Yearly, Winter, Summer Median and difference and ratio between VV and VH ############
 
 ## Acquisition dates of example data
@@ -59,49 +57,49 @@ dates <- as.character(dates$Dates)
 months <- substr(dates, 5, 6)
 winterScenes <- which(months %in% c("12", "01", "02"))
 summerScenes <- which(months %in% c("07", "08", "09"))
+outBasename  <- paste0(outputDirectory, "/L2_", samplingSite, "_")
 
 for (pol in c("VH","VV")){
-  
-  # Import a Geotiff file processed in SNAP
-  s1stack <- stack(paste0(inputDirectory, "ALB_gamma0_",pol,".tif"))
-  
-  # Stack summer and winter scenes
-  summer <- s1stack[[summerScenes]]
-  winter <- s1stack[[winterScenes]]
-  
-  # Calculate Yearly, Winter, Summer Median
-  med_summer <- calc(summer, fun=median, na.rm = TRUE, 
-                     filename = paste0(outputDirectory, "/L2_", samplingSite, "_" , pol, "_summer.tif"),
-                     datatype = dataType, options = cOpts, overwrite = TRUE)
-  med_winter <- calc(winter, fun=median, na.rm = TRUE,
-                     filename = paste0(outputDirectory, "/L2_", samplingSite, "_" , pol, "_winter.tif"), 
-                     datatype = dataType, options = cOpts, overwrite = TRUE)
-  median_all <- calc(s1stack, fun=median, na.rm = TRUE , 
-                     filename = paste0(outputDirectory, "/L2_", samplingSite, "_" , pol, "_year.tif"),  
-                     datatype = dataType, options = cOpts, overwrite = TRUE)
-  
-  # Calculate difference between winter and summer median
-  diff_season <- calc(stack(med_summer, med_winter), fun=function(x) {x[,1]-x[,2]}, forcefun = TRUE,
-                      filename = paste0(outputDirectory, "/L2_", samplingSite, "_" , pol, "_diff_summer_winter.tif"),  
-                      datatype = dataType, options = cOpts, overwrite = TRUE)
-  
+	
+	# Import a Geotiff file processed in SNAP
+	s1stack <- stack(paste0(inputDirectory, "ALB_gamma0_",pol,".tif"))
+	
+	# Stack summer and winter scenes
+	summer <- s1stack[[summerScenes]]
+	winter <- s1stack[[winterScenes]]
+	
+	# Calculate Yearly, Winter, Summer Median
+	
+	med_summer <- calc(summer, fun = median, na.rm = TRUE, 
+			filename = paste0(outBasename, pol, "_summer.tif"),
+			datatype = dataType, options = cOpts, overwrite = TRUE)
+	med_winter <- calc(winter, fun = median, na.rm = TRUE,
+			filename = paste0(outBasename, pol, "_winter.tif"), 
+			datatype = dataType, options = cOpts, overwrite = TRUE)
+	median_all <- calc(s1stack, fun = median, na.rm = TRUE , 
+			filename = paste0(outBasename, pol, "_year.tif"),  
+			datatype = dataType, options = cOpts, overwrite = TRUE)
+	
+	# Calculate difference between winter and summer median
+	diff_season <- calc(stack(med_summer, med_winter), fun = function(x) {x[,1]-x[,2]}, forcefun = TRUE,
+			filename = paste0(outBasename, pol, "_diff_summer_winter.tif"),
+			datatype = dataType, options = cOpts, overwrite = TRUE)
+	
 }
 
 ## Import yearly meadian backscatter values
-vv_med <- raster(paste0(outputDirectory,"/L2_",  samplingSite, "_VV_year.tif"))
-vH_med <- raster(paste0(outputDirectory,"/L2_",  samplingSite, "_VH_year.tif"))
+vv_med <- raster(paste0(outBasename, "VV_year.tif"))
+vH_med <- raster(paste0(outBasename, "VH_year.tif"))
 
 ## Calculate difference between median polarisations
 overlay(vv_med, vH_med, fun = function(vv,vh) {(vv - vh)}, 
-        forcefun = TRUE, 
-        filename=paste0(outputDirectory, "/L2_", samplingSite,"_diff_VH_VV.tif"), 
-        datatype = dataType, options = cOpts, overwrite=TRUE)
+		forcefun = TRUE, filename = paste0(outBasename,"diff_VH_VV.tif"),
+		datatype = dataType, options = cOpts, overwrite = TRUE)
 
 ## Calculate polarisation ratios
 overlay(vv_med, vH_med,fun =  function(vv,vh) {vv/vh*10000}, # Scale the ratio values due to data type of integers
-        forcefun = TRUE, 
-        filename=paste0(outputDirectory,"/L2_", samplingSite,"_ratio_VV_VH.tif"), 
-        datatype = dataType, options = cOpts, overwrite=TRUE)
+		forcefun = TRUE, filename = paste0(outBasename,"ratio_VV_VH.tif"),
+		datatype = dataType, options = cOpts, overwrite = TRUE)
 
 
 ############# Process 2. Calculate 9x9 GLCM #############################
@@ -119,18 +117,19 @@ minmax_tab$layers <- list.files(outputDirectory, pattern = "^L2.*tif$", full.nam
 
 ## Calculate GLCM Texture 
 glcm_list <- lapply(1:nrow(minmax_tab), function(k) {
-  img_k <- raster(minmax_tab$layers[k])
-  img_k_c <- clamp(img_k, lower = minmax_tab$totMin[k], 
-                   upper = minmax_tab$totMax[k], useValues = TRUE)
-  texture_glcm <- glcm(img_k_c,
-                       n_grey = 32, 
-                       window = c(9,9),
-                       min_x = minmax_tab$totMin[k], 
-                       max_x = minmax_tab$totMax[k], 
-                       statistics = c("dissimilarity", "entropy"),
-                       scale_factor = scaleFactor,
-                       asinteger = TRUE)
-})
+			img_k   <- raster(minmax_tab$layers[k])
+			img_k_c <- clamp(img_k, lower = minmax_tab$totMin[k], 
+					         upper = minmax_tab$totMax[k], useValues = TRUE)
+			
+			texture_glcm <- glcm(img_k_c,
+					n_grey = 32, 
+					window = c(9,9),
+					min_x = minmax_tab$totMin[k], 
+					max_x = minmax_tab$totMax[k], 
+					statistics = c("dissimilarity", "entropy"),
+					scale_factor = scaleFactor,
+					asinteger = TRUE)
+		})
 texture_stack <- stack(glcm_list)
 names(texture_stack) <-  paste0(rep(minmax_tab$pol, each = 2), c("_GLCM_9x9_DIS", "_GLCM_9x9_ENT"))
 outfile    <- paste0(outputDirectory, "/L3_texture_",samplingSite,"_N9x9_glcm.tif")
@@ -141,9 +140,9 @@ writeRaster(texture_stack, filename = outfile, datatype = dataType, options = cO
 
 ## Calculate mean in 9x9 neighborhood
 neighborhood_list <- lapply(1:nrow(minmax_tab), function(k) {
-  img_k <- raster(minmax_tab$layers[k])
-  focal_mean <- focal(img_k, w = matrix(nrow=9,ncol=9, data=1), fun = mean, na.rm = TRUE )
-})
+			img_k <- raster(minmax_tab$layers[k])
+			focal_mean <- focal(img_k, w = matrix(nrow=9,ncol=9, data=1), fun = mean, na.rm = TRUE )
+		})
 neighborhood_stack <- stack(neighborhood_list)
 names(neighborhood_stack) <-  paste0(minmax_tab$pol, "_9x9_mean")
 outfile    <- paste0(outputDirectory, "/L3_neighborhood_",samplingSite,"_N9x9_mean.tif")
@@ -151,9 +150,9 @@ writeRaster(neighborhood_stack, filename = outfile, datatype = dataType, options
 
 ## Calculate standard deviation in 9x9 neighborhood
 heterogeneity_list <- lapply(1:nrow(minmax_tab), function(k) {
-  img_k <- raster(minmax_tab$layers[k])
-  focal_sd <- focal(img_k, w = matrix(nrow=9,ncol=9, data=1), fun = sd, na.rm = TRUE )
-})
+			img_k <- raster(minmax_tab$layers[k])
+			focal_sd <- focal(img_k, w = matrix(nrow=9,ncol=9, data=1), fun = sd, na.rm = TRUE )
+		})
 heterogeneity_stack <- stack(heterogeneity_list)
 names(heterogeneity_stack) <-  paste0(minmax_tab$pol, "_9x9_SD")
 outfile    <- paste0(outputDirectory, "/L3_heterogeneity_",samplingSite,"_N9x9_SD.tif")
@@ -163,7 +162,7 @@ writeRaster(heterogeneity_stack, filename = outfile, datatype = dataType, option
 ############# Process 4. Extract the metrics from the example plots ##################################
 
 # Import all variables as a single raster stack
-grids <- list.files(outputDirectory, pattern="^L3.*tif$", full.names=TRUE)
+grids <- list.files(outputDirectory, pattern = "^L3.*tif$", full.names = TRUE)
 s     <- stack(grids)
 
 # Create the variable names
@@ -179,7 +178,7 @@ ex  <- matrix(data = unlist(ext), nrow = length(plots))
 colnames(ex) <- grids_name
 
 # Write to a data frame
-df <- data.frame(Explrtr=plots$EP,ex)
+df <- data.frame(Explrtr = plots$EP,ex)
 df$ratio_VV_VH_9x9_SD <- df$ratio_VV_VH_9x9_SD/10000 # Rescale the ratio values
 df$ratio_VV_VH_9x9_mean <- df$ratio_VV_VH_9x9_mean/10000 # Rescale the ratio values
 
