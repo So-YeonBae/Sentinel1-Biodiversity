@@ -26,7 +26,7 @@ cOpts  <- c("COMPRESS=DEFLATE", "INTERLEAVE=BAND") ## Compression for GeoTiff fi
 ## Required input files for process 1 (Calculate the seasonal median) ##
 # Data description:
 # There are two multi-layer GeoTiff per polarisation (VV, VH), containing the gamma_0
-# backscatter coefficients derived via ESA SNAP toolbox. Each stack contains 79 layers 
+# backscatter coefficients derived via ESA SNAP toolbox. Each stack contains 107 layers 
 # which represent all acquisitions between 2016-01-01 and 2016-12-31.
 # 1) Stack for VV polarisation:
 paste0(inputDirectory, "ALB_gamma0_VV.tif")
