@@ -1,10 +1,12 @@
 # Sentinel1-Biodiversity
 Code, example dataset, and instructions of Sentinel-1 data pre-processing and pixel-based summary statistics used in "Radar vision for mapping forest biodiversity from space"
 
+S3.1 and S3.2 were applied to "Tracking the temporal dynamics of insect defoliation by high-resolution radar satellite data" by Bae et al.
 
 
 # Supplementary Information 
-Bae et al.(2019) Radar vision in the mapping of forest biodiversity from space.
+Bae, S. et al. Radar vision in the mapping of forest biodiversity from space. Nature Communications 10, 4757, doi:10.1038/s41467-019-12737-x (2019).
+
 ## Method S3 Sentinel-1 data pre-processing and pixel-based summary statistics
 ### S3.1 Download of the GRDH product from the ESA Sentinel Data Hub (DHuS)
 All Sentinel data are available for free from the official ESA data portal (https:/scihub.copernicus.eu). User registration is required, but free. DHuS offers a user interface (Fig. S23) for interactive data discovery, or, alternatively an API for automated query and retrieval.
